@@ -114,77 +114,94 @@
     </div>
 
     <script>
-        function registerUser() {
-            const username = document.getElementById("username").value.trim();
-            const password = document.getElementById("password").value.trim();
+    // Функция добавления пользователя
+    function registerUser() {
+        const username = document.getElementById("username").value.trim();
+        const password = document.getElementById("password").value.trim();
 
-            if (!username || !password) {
-                alert("Введите логин и пароль!");
-                return;
-            }
+        if (!username || !password) {
+            alert("Введите логин и пароль!");
+            return;
+        }
 
-            let users = JSON.parse(localStorage.getItem("users")) || [];
-            
-            // Проверяем, есть ли уже такой пользователь
-            if (users.some(user => user.username === username)) {
-                alert("Такой пользователь уже существует!");
-                return;
-            }
+        let users = JSON.parse(localStorage.getItem("users")) || [];
 
-            users.push({ username, password });
-            localStorage.setItem("users", JSON.stringify(users));
+        // Проверяем, есть ли уже такой пользователь
+        if (users.some(user => user.username === username)) {
+            alert("Такой пользователь уже существует!");
+            return;
+        }
 
-            alert("Пользователь добавлен!");
-            document.getElementById("username").value = "";
-            document.getElementById("password").value = "";
+        users.push({ username, password });
+        localStorage.setItem("users", JSON.stringify(users));
 
+        alert("Пользователь добавлен!");
+        document.getElementById("username").value = "";
+        document.getElementById("password").value = "";
+
+        displayUsers();
+    }
+
+    // Функция удаления пользователя
+    function deleteUser(usernameToDelete) {
+        let users = JSON.parse(localStorage.getItem("users")) || [];
+        users = users.filter(user => user.username !== usernameToDelete);
+        localStorage.setItem("users", JSON.stringify(users));
+
+        alert(`Пользователь "${usernameToDelete}" удалён!`);
+        displayUsers();
+    }
+
+    // Функция отображения пользователей
+    function displayUsers() {
+        const userList = document.getElementById("userList");
+        const users = JSON.parse(localStorage.getItem("users")) || [];
+
+        userList.innerHTML = users.length === 0 ? "<p>Нет зарегистрированных пользователей</p>" : "";
+
+        users.forEach(user => {
+            const userItem = document.createElement("div");
+            userItem.innerHTML = `
+                <span>${user.username}</span>
+                <button onclick="deleteUser('${user.username}')">Удалить</button>
+            `;
+            userList.appendChild(userItem);
+        });
+    }
+
+    // Функция скачивания users.json
+    function downloadUsers() {
+        const users = localStorage.getItem("users") || "[]";
+        const blob = new Blob([users], { type: "application/json" });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = "users.json";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
+    // Функция загрузки users.json обратно
+    function uploadUsers(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            localStorage.setItem("users", e.target.result);
+            alert("Пользователи загружены!");
             displayUsers();
-        }
+        };
+        reader.readAsText(file);
+    }
 
-        function deleteUser() {
-            const usernameToDelete = document.getElementById("deleteUsername").value.trim();
-            let users = JSON.parse(localStorage.getItem("users")) || [];
+    document.addEventListener("DOMContentLoaded", displayUsers);
+</script>
 
-            const updatedUsers = users.filter(user => user.username !== usernameToDelete);
+<!-- Кнопки -->
+<button onclick="downloadUsers()">Скачать список пользователей</button>
+<input type="file" accept="application/json" onchange="uploadUsers(event)">
 
-            if (updatedUsers.length === users.length) {
-                alert("Такого пользователя нет!");
-                return;
-            }
-
-            localStorage.setItem("users", JSON.stringify(updatedUsers));
-            alert(`Пользователь "${usernameToDelete}" удалён!`);
-            document.getElementById("deleteUsername").value = "";
-
-            displayUsers();
-        }
-
-        function displayUsers() {
-            const userList = document.getElementById("userList");
-            const users = JSON.parse(localStorage.getItem("users")) || [];
-
-            userList.innerHTML = users.length === 0 ? "<p>Нет зарегистрированных пользователей</p>" : "";
-
-            users.forEach(user => {
-                const userItem = document.createElement("div");
-                userItem.classList.add("user-item");
-                userItem.innerHTML = `
-                    <span>${user.username}</span>
-                    <button class="delete-btn" onclick="deleteUserByName('${user.username}')">Удалить</button>
-                `;
-                userList.appendChild(userItem);
-            });
-        }
-
-        function deleteUserByName(username) {
-            let users = JSON.parse(localStorage.getItem("users")) || [];
-            const updatedUsers = users.filter(user => user.username !== username);
-            localStorage.setItem("users", JSON.stringify(updatedUsers));
-            displayUsers();
-        }
-
-        document.addEventListener("DOMContentLoaded", displayUsers);
-    </script>
 
 </body>
 </html>
